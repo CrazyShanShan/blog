@@ -21,4 +21,31 @@ public interface ArticleService {
      * @return: org.example.vo.Result<java.util.HashMap>
      **/
     Result listArticles(PageParams pageParams);
+
+    /**
+     * 查询最热文章
+     * @Author: ZBZ
+     * @Date: 2021/8/6
+     * @param limit: limit
+     * @return: org.example.vo.Result
+     **/
+    Result hotArticles(int limit);
+
+    /**
+     * 查询最新文章
+     * @Author: ZBZ
+     * @Date: 2021/8/6
+     * @param limit: limit
+     * @return: org.example.vo.Result
+     **/
+    Result newArticles(int limit);
+
+    /**
+     * 首页文章归档
+     * @Author: ZBZ
+     * @Date: 2021/8/6
+
+     * @return: org.example.vo.Result
+     **/
+    Result listArchives();
 }

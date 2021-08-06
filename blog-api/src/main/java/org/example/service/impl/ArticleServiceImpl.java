@@ -2,6 +2,7 @@ package org.example.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.example.dao.dos.Archives;
 import org.example.dao.mapper.ArticleMapper;
 import org.example.dao.pojo.Article;
 import org.example.service.ArticleService;
@@ -53,15 +54,57 @@ public class ArticleServiceImpl implements ArticleService {
         Page<Article> articlePage = articleMapper.selectPage(page, queryWrapper);
         List<Article> records = articlePage.getRecords();
 
-        List<ArticleVo> articleVoList = copyList(records);
+        List<ArticleVo> articleVoList = copyList(records, true, true);
 
         return Result.success(articleVoList);
     }
 
-    private List<ArticleVo> copyList(List<Article> records) {
+    @Override
+    public Result hotArticles(int limit) {
+        /**
+         * 查询 首页 最热文章
+         */
+
+        LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
+
+        queryWrapper.orderByDesc(Article::getViewCounts);
+        queryWrapper.select(Article::getId, Article::getTitle);
+        queryWrapper.last("limit " + limit);
+
+        List<Article> articles = articleMapper.selectList(queryWrapper);
+
+        return Result.success(copyList(articles, false, false));
+    }
+
+    @Override
+    public Result newArticles(int limit) {
+        /**
+         * 查询 首页最新文章
+         */
+
+        LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
+
+        queryWrapper.orderByDesc(Article::getCreateDate);
+
+        queryWrapper.select(Article::getId, Article::getTitle);
+
+        queryWrapper.last("limit " + limit);
+
+        List<Article> articles = articleMapper.selectList(queryWrapper);
+
+        return Result.success(copyList(articles, false, false));
+    }
+
+    @Override
+    public Result listArchives() {
+        List<Archives> archivesList = articleMapper.listArchives();
+        return Result.success(archivesList);
+    }
+
+    private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor) {
         List<ArticleVo> articleVoList = new ArrayList<>();
         for (Article article : records) {
-            articleVoList.add(copy(article, true, true));
+            articleVoList.add(copy(article, isTag, isTag));
         }
         return articleVoList;
     }
@@ -71,7 +114,6 @@ public class ArticleServiceImpl implements ArticleService {
         BeanUtils.copyProperties(article, res);
         res.setId(String.valueOf(article.getId()));
         res.setCreateDate(new DateTime(article.getCreateDate()).toString("yyyy-MM-dd HH:mm"));
-
 
         if (isTag) {
             Long articleId = article.getId();

@@ -42,4 +42,51 @@ public class ArticleController {
         return articleService.listArticles(pageParams);
     }
 
+
+    /**
+     * 首页 最热文章
+     * @Author: ZBZ
+     * @Date: 2021/8/6
+
+     * @return: org.example.vo.Result
+     **/
+    @PostMapping("hot")
+    @ApiOperation("首页 最热文章")
+    public Result hotArticles() {
+        int limit = 5;
+        return articleService.hotArticles(limit);
+    }
+
+
+    /**
+     * 首页 最新文章
+     * @Author: ZBZ
+     * @Date: 2021/8/6
+
+     * @return: org.example.vo.Result
+     **/
+    @PostMapping("new")
+    @ApiOperation("首页 最新文章")
+    public Result newArticles() {
+        int limit = 5;
+        return articleService.newArticles(limit);
+    }
+
+
+
+
+   /**
+    * 首页文章 归档
+    * @Author: ZBZ
+    * @Date: 2021/8/6
+
+    * @return: org.example.vo.Result
+    **/
+    @PostMapping("listArchives")
+    @ApiOperation("首页 文章归档")
+    public Result listArchives(){
+        return articleService.listArchives();
+    }
+
+
 }

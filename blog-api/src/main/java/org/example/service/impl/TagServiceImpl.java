@@ -3,12 +3,15 @@ package org.example.service.impl;
 import org.example.dao.mapper.TagMapper;
 import org.example.dao.pojo.Tag;
 import org.example.service.TagService;
+import org.example.vo.Result;
 import org.example.vo.TagVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /***
@@ -31,7 +34,6 @@ public class TagServiceImpl implements TagService {
         return copyList(tagList);
     }
 
-
     public TagVo copy(Tag tag){
         TagVo tagVo = new TagVo();
         BeanUtils.copyProperties(tag,tagVo);
@@ -44,5 +46,20 @@ public class TagServiceImpl implements TagService {
             tagVoList.add(copy(tag));
         }
         return tagVoList;
+    }
+
+
+    @Override
+    public Result hots(int limit) {
+
+        List<Long> tagIds = tagMapper.findHotsTagIds(limit);
+
+        if (CollectionUtils.isEmpty(tagIds)) {
+            return Result.success(Collections.emptyList());
+        }
+
+        List<Tag> tagList = tagMapper.findTagsByTagId(tagIds);
+
+        return Result.success(tagList);
     }
 }

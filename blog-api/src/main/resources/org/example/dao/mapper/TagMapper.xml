@@ -14,4 +14,20 @@
             )
     </select>
 
+
+    <select id="findHotsTagIds" parameterType="int" resultType="java.lang.Long">
+        select tag_id from ms_article_tag
+        group by tag_id
+        order by count(tag_id) desc
+        limit #{limit}
+    </select>
+
+    <select id="findTagsByTagId" parameterType="list" resultType="org.example.dao.pojo.Tag">
+        select id, tag_name tagName from ms_tag
+        where id in
+        <foreach collection="tagIds" item="tagId" separator="," open="(" close=")">
+            #{tagId}
+        </foreach>
+    </select>
+
 </mapper>
