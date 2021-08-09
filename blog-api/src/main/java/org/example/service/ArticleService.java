@@ -48,4 +48,14 @@ public interface ArticleService {
      * @return: org.example.vo.Result
      **/
     Result listArchives();
+
+
+    /**
+     * find article with id
+     * @Author: ZBZ
+     * @Date: 2021/8/7
+     * @param articleId: article id
+     * @return: org.example.vo.Result
+     **/
+    Result findArticleById(Long articleId);
 }

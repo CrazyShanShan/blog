@@ -9,7 +9,11 @@ public enum ErrorCode {
 
     PARAMS_ERROR(10001, "参数错误"),
     ACCOUNT_PWD_NOT_EXIST(10002, "用户名或密码不存在"),
-    TOKEN_ERROR(10003, "TOKEN不合法")
+    TOKEN_ERROR(10003, "TOKEN不合法"),
+    ACCOUNT_EXIST(10004,"账号已存在"),
+    NO_PERMISSION(70001,"无访问权限"),
+    SESSION_TIME_OUT(90001,"会话超时"),
+    NO_LOGIN(90002,"未登录"),
     ;
 
     private int code;

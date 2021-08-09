@@ -35,4 +35,22 @@ public interface SysUserService {
      * @return: org.example.vo.Result
      **/
     Result findUserByToken(String token);
+
+    /**
+     * 根据账户查询user
+     * @Author: ZBZ
+     * @Date: 2021/8/7
+     * @param account: account
+     * @return: org.example.dao.pojo.SysUser
+     **/
+    SysUser findUserByAccount(String account);
+
+    /**
+     * insert user
+     * @Author: ZBZ
+     * @Date: 2021/8/7
+     * @param sysUser:  user
+     * @return: void
+     **/
+    void save(SysUser sysUser);
 }

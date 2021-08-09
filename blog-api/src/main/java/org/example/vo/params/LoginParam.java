@@ -18,6 +18,6 @@ public class LoginParam {
     @ApiModelProperty(value = "密码", allowableValues = "root")
     private String password;
 
-    @ApiModelProperty(value = "用户昵称", allowableValues = "root")
+    @ApiModelProperty(value = "昵称", allowableValues = "root")
     private String nickname;
 }

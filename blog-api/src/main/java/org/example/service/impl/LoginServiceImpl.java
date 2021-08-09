@@ -11,6 +11,7 @@ import org.example.utils.JwtUtils;
 import org.example.vo.ErrorCode;
 import org.example.vo.Result;
 import org.example.vo.params.LoginParam;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +57,7 @@ public class LoginServiceImpl implements LoginService {
 
         // md5加密
         password = DigestUtils.md5Hex(password + slat);
-        System.out.println(password);
+
         SysUser sysUser = sysUserService.findUserByAccountPassword(account, password);
 
         if (sysUser == null) {
@@ -67,5 +68,55 @@ public class LoginServiceImpl implements LoginService {
 
         redisTemplate.opsForValue().set("TOKEN_" + token, JSON.toJSONString(sysUser), 1, TimeUnit.DAYS);
         return Result.success(token);
+    }
+
+    @Override
+    public Result logout(String token) {
+        /**
+         * 登出，将redis里面的set清楚
+         */
+        redisTemplate.delete("TOKEN_" + token);
+        return Result.success();
+    }
+
+    @Override
+    public Result register(LoginParam loginParam) {
+        /**
+         * 1. 判断参数是否合法
+         * 2. 判断用户是否存在
+         * 3. 不存在，注册用户
+         * 4. 使用jwt生成token
+         * 5. 存入redis，并返回
+         * 6. 加上事物，一旦中间的任何过程出现问题，注册用户失败， 需要回滚
+         */
+         String account = loginParam.getAccount();
+         String password = loginParam.getPassword();
+         String nickname = loginParam.getNickname();
+
+         if (StringUtils.isBlank(nickname) || StringUtils.isBlank(password) || StringUtils.isBlank(account)) {
+            return Result.fail(ErrorCode.PARAMS_ERROR.getCode(), ErrorCode.PARAMS_ERROR.getMsg());
+         }
+
+         SysUser sysUser = sysUserService.findUserByAccount(account);
+         if (sysUser != null) {
+             return Result.fail(ErrorCode.ACCOUNT_EXIST.getCode(), ErrorCode.ACCOUNT_EXIST.getMsg());
+         }
+
+         sysUser = new SysUser();
+         BeanUtils.copyProperties(loginParam, sysUser);
+         sysUser.setPassword(DigestUtils.md5Hex(password + slat));
+         sysUser.setCreateDate(System.currentTimeMillis());
+         sysUser.setLastLogin(System.currentTimeMillis());
+         sysUser.setAvatar("/static/img/logo.b3a48c0.png");
+         sysUser.setAdmin(1);
+         sysUser.setDeleted(0);
+         sysUser.setSalt("");
+         sysUser.setStatus("");
+         sysUser.setEmail("");
+         sysUserService.save(sysUser);
+
+         String token = JwtUtils.createToken(sysUser.getId());
+         redisTemplate.opsForValue().set("TOKEN_" + token, JSON.toJSONString(sysUser), 1, TimeUnit.DAYS);
+         return Result.success(token);
     }
 }

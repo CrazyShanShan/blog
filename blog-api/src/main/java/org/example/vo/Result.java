@@ -23,6 +23,11 @@ public class Result<T> {
 
     private T data;
 
+    public static<T> Result<T> success() {
+        return new Result(true,200,"success", "");
+    }
+
+
     public static <T> Result<T> success(T data) {
         return new Result(true, 200, "success", data);
     }

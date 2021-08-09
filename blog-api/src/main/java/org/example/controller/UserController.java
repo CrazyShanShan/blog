@@ -2,6 +2,7 @@ package org.example.controller;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.example.common.aop.LogAnnotation;
 import org.example.service.SysUserService;
 import org.example.vo.Result;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,7 @@ public class UserController {
      **/
     @PostMapping("currentUser")
     @ApiOperation("返回登陆成功的用户信息")
+    @LogAnnotation(module = "用户模块", operator = "根据token，获取当前用户")
     public Result currentUser(@RequestHeader("Authorization") String token) {
         return sysUserService.findUserByToken(token);
     }
