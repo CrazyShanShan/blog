@@ -2,6 +2,7 @@ package org.example.service;
 
 import org.example.vo.Result;
 import org.example.vo.params.PageParams;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,4 +59,13 @@ public interface ArticleService {
      * @return: org.example.vo.Result
      **/
     Result findArticleById(Long articleId);
+
+
+    /**
+     *  将缓存从的数据访问量同步到数据库中
+     * @Author: ZBZ
+     * @Date: 2021/8/10
+     * @return: void
+     **/
+    void transViewCountFromRedisToDb();
 }

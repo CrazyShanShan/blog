@@ -8,6 +8,7 @@ import org.example.service.TokenService;
 import org.example.vo.ErrorCode;
 import org.example.vo.LoginUserVo;
 import org.example.vo.Result;
+import org.example.vo.UserVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -81,6 +82,22 @@ public class SysUserServiceImpl implements SysUserService {
     @Override
     public void save(SysUser sysUser) {
         sysUserMapper.insert(sysUser);
+    }
+
+    @Override
+    public UserVo findUserVoById(Long authorId) {
+        SysUser sysUser = sysUserMapper.selectById(authorId);
+        if (sysUser == null) {
+            sysUser = new SysUser();
+            sysUser.setId(1L);
+            sysUser.setAvatar("/static/img/logo.b3a48c0.png");
+            sysUser.setNickname("码神之路");
+        }
+
+        UserVo userVo = new UserVo();
+        BeanUtils.copyProperties(sysUser, userVo);
+        userVo.setId(String.valueOf(sysUser.getId()));
+        return userVo;
     }
 
     private LoginUserVo copy(SysUser sysUser) {

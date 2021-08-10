@@ -2,6 +2,7 @@ package org.example.service;
 
 import org.example.dao.pojo.SysUser;
 import org.example.vo.Result;
+import org.example.vo.UserVo;
 
 /***
  * @Description: ""
@@ -53,4 +54,13 @@ public interface SysUserService {
      * @return: void
      **/
     void save(SysUser sysUser);
+
+    /**
+     * find user vo from sys_user use id
+     * @Author: ZBZ
+     * @Date: 2021/8/10
+     * @param authorId: author id
+     * @return: org.example.vo.UserVo
+     **/
+    UserVo findUserVoById(Long authorId);
 }

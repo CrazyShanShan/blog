@@ -1,16 +1,15 @@
 package org.example.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dao.dos.Archives;
 import org.example.dao.mapper.ArticleBodyMapper;
 import org.example.dao.mapper.ArticleMapper;
 import org.example.dao.pojo.Article;
 import org.example.dao.pojo.ArticleBody;
-import org.example.service.ArticleService;
-import org.example.service.CategoryService;
-import org.example.service.SysUserService;
-import org.example.service.TagService;
+import org.example.service.*;
 import org.example.vo.ArticleBodyVo;
 import org.example.vo.ArticleVo;
 import org.example.vo.Result;
@@ -18,6 +17,7 @@ import org.example.vo.TagVo;
 import org.example.vo.params.PageParams;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -31,7 +31,11 @@ import java.util.List;
  */
 
 @Service
+@Slf4j
 public class ArticleServiceImpl implements ArticleService {
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private ArticleMapper articleMapper;
@@ -48,6 +52,8 @@ public class ArticleServiceImpl implements ArticleService {
     @Resource
     private CategoryService categoryService;
 
+    @Resource
+    private ThreadService threadService;
 
     @Override
     public Result listArticles(PageParams pageParams) {
@@ -116,11 +122,62 @@ public class ArticleServiceImpl implements ArticleService {
          * 1。根据id查询 文章信息
          * 2。根据bodyId和Category 去做关联查询
          */
-         Article article = articleMapper.selectById(articleId);
-         ArticleVo articleVo = copy(article, true, true, true, true);
+        // 获取文章信息
+        Article article = articleMapper.selectById(articleId);
+        // get article:id key
+        String key = "article:" + articleId;
+        String viewCount = stringRedisTemplate.opsForValue().get(key);
+        // 更新的阅读量
+        long n;
+        if (viewCount == null) {
+            // redis中没有阅读量, 那么则查询数据库中的文章信息
+
+            // 然后给该key对应的value赋值
+            stringRedisTemplate.opsForValue().set(key, String.valueOf(article.getViewCounts()));
+            // n++
+            n = stringRedisTemplate.opsForValue().increment(key);
+        } else {
+            // 直接从缓存中取数据并且加1
+            n = stringRedisTemplate.opsForValue().increment(key);
+        }
+
+        log.info("点击数： {}", n);
+
+        ArticleVo articleVo = copy(article, true, true, true, true);
+        articleVo.setViewCounts((int) n);
         return Result.success(articleVo);
     }
 
+    @Override
+    public void transViewCountFromRedisToDb() {
+        LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
+        // 1. 获取所有的actile
+        queryWrapper.select(Article::getId, Article::getViewCounts);
+        List<Article> articles = articleMapper.selectList(queryWrapper);
+        String key;
+        String viewCount;
+        long articleId;
+        for (Article article : articles) {
+            articleId =  article.getId();
+            // 1. 获取文章点赞数
+            key = "article:" + articleId;
+            viewCount = stringRedisTemplate.opsForValue().get(key);
+            log.info("更新的文章的ID:{}", articleId);
+            log.info("当前文章的阅读数:{}", article.getViewCounts());
+
+            if (viewCount != null) {
+                // 2. 将文章点赞数存入表中
+                Article updateArticle = new Article();
+                updateArticle.setViewCounts(Integer.parseInt(viewCount));
+                LambdaUpdateWrapper<Article> updateWrapper = new LambdaUpdateWrapper<>();
+                updateWrapper.eq(Article::getId, articleId);
+                updateWrapper.eq(Article::getViewCounts, article.getViewCounts());
+                articleMapper.update(updateArticle, updateWrapper);
+                log.info("更新之后的文章的阅读数为:{}", viewCount);
+            }
+
+        }
+    }
 
 
     private List<ArticleVo> copyList(List<Article> records, boolean isTag, boolean isAuthor) {
@@ -149,7 +206,7 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         if (isBody) {
-            Long  bodyId = article.getBodyId();
+            Long bodyId = article.getBodyId();
             res.setBody(findArticleBodyById(bodyId));
         }
 
