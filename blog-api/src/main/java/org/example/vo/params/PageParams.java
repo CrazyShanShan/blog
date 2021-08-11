@@ -17,4 +17,8 @@ public class PageParams {
 
     @ApiModelProperty(value = "每页的数量", allowableValues = "10")
     private int pageSize = 10;
+
+    private Long categoryId;
+
+    private Long tagId;
 }

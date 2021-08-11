@@ -1,5 +1,7 @@
 package org.example.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.bouncycastle.asn1.cmc.TaggedAttribute;
 import org.example.dao.mapper.TagMapper;
 import org.example.dao.pojo.Tag;
 import org.example.service.TagService;
@@ -26,6 +28,27 @@ public class TagServiceImpl implements TagService {
     @Resource
     private TagMapper tagMapper;
 
+
+    @Override
+    public Result findAll() {
+        LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.select(Tag::getId, Tag::getTagName);
+        List<Tag> tags = tagMapper.selectList(queryWrapper);
+        return Result.success(copyList(tags));
+    }
+
+    @Override
+    public Result findAllDetail() {
+        LambdaQueryWrapper<Tag> queryWrapper = new LambdaQueryWrapper<>();
+        List<Tag> tags = tagMapper.selectList(queryWrapper);
+        return Result.success(copyList(tags));
+    }
+
+    @Override
+    public Result findDetailById(Long id) {
+        Tag tag = tagMapper.selectById(id);
+        return Result.success(copy(tag));
+    }
 
     @Override
     public List<TagVo> findTagsByArticleId(Long articleId) {

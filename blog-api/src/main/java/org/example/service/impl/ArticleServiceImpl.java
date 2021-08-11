@@ -3,17 +3,23 @@ package org.example.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mchange.v1.util.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dao.dos.Archives;
 import org.example.dao.mapper.ArticleBodyMapper;
 import org.example.dao.mapper.ArticleMapper;
+import org.example.dao.mapper.ArticleTagMapper;
 import org.example.dao.pojo.Article;
 import org.example.dao.pojo.ArticleBody;
+import org.example.dao.pojo.ArticleTag;
+import org.example.dao.pojo.SysUser;
 import org.example.service.*;
+import org.example.utils.UserThreadLocal;
 import org.example.vo.ArticleBodyVo;
 import org.example.vo.ArticleVo;
 import org.example.vo.Result;
 import org.example.vo.TagVo;
+import org.example.vo.params.ArticleParam;
 import org.example.vo.params.PageParams;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
@@ -22,7 +28,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /***
  * @Description: "article service impl"
@@ -52,6 +60,10 @@ public class ArticleServiceImpl implements ArticleService {
     @Resource
     private CategoryService categoryService;
 
+
+    @Resource
+    private ArticleTagMapper articleTagMapper;
+
     @Resource
     private ThreadService threadService;
 
@@ -64,6 +76,26 @@ public class ArticleServiceImpl implements ArticleService {
         Page<Article> page = new Page<>(pageParams.getPage(), pageParams.getPageSize());
 
         LambdaQueryWrapper<Article> queryWrapper = new LambdaQueryWrapper<>();
+
+        if (pageParams.getCategoryId() != null) {
+            queryWrapper.eq(Article::getCategoryId, pageParams.getCategoryId());
+        }
+
+        List<Long> articleIdList = new ArrayList<>();
+        if (pageParams.getTagId() != null) {
+            LambdaQueryWrapper<ArticleTag> queryWrapper1 = new LambdaQueryWrapper<>();
+            queryWrapper1.eq(ArticleTag::getTagId, pageParams.getTagId());
+            List<ArticleTag> articleTags = articleTagMapper.selectList(queryWrapper1);
+
+            for (ArticleTag articleTag : articleTags) {
+                articleIdList.add(articleTag.getArticleId());
+            }
+
+            if (articleIdList.size() > 0) {
+                queryWrapper.in(Article::getId, articleIdList);
+            }
+        }
+
 
         queryWrapper.orderByDesc(Article::getWeight, Article::getCreateDate);
         Page<Article> articlePage = articleMapper.selectPage(page, queryWrapper);
@@ -131,15 +163,11 @@ public class ArticleServiceImpl implements ArticleService {
         long n;
         if (viewCount == null) {
             // redis中没有阅读量, 那么则查询数据库中的文章信息
-
             // 然后给该key对应的value赋值
             stringRedisTemplate.opsForValue().set(key, String.valueOf(article.getViewCounts()));
-            // n++
-            n = stringRedisTemplate.opsForValue().increment(key);
-        } else {
-            // 直接从缓存中取数据并且加1
-            n = stringRedisTemplate.opsForValue().increment(key);
         }
+        // 直接从缓存中取数据并且加1
+        n = stringRedisTemplate.opsForValue().increment(key);
 
         log.info("点击数： {}", n);
 
@@ -158,7 +186,7 @@ public class ArticleServiceImpl implements ArticleService {
         String viewCount;
         long articleId;
         for (Article article : articles) {
-            articleId =  article.getId();
+            articleId = article.getId();
             // 1. 获取文章点赞数
             key = "article:" + articleId;
             viewCount = stringRedisTemplate.opsForValue().get(key);
@@ -177,6 +205,58 @@ public class ArticleServiceImpl implements ArticleService {
             }
 
         }
+    }
+
+    @Override
+    public Result publish(ArticleParam articleParam) {
+        // 此接口需要加入到登陆拦截器中
+        // 获取登陆的用户
+        SysUser sysUser = UserThreadLocal.get();
+        /**
+         * 1: 发布文章 目的： 构建Article对象
+         * 2: Article对象需要有作者信息： 为当前的登陆用户
+         * 3: 标签信息:  要将标签加入到关联列表中
+         * 4: body内容存储: article bodyId
+         */
+        Article article = new Article();
+        article.setCommentCounts(0);
+        article.setCreateDate(System.currentTimeMillis());
+        article.setSummary(articleParam.getSummary());
+        article.setTitle(articleParam.getTitle());
+        article.setViewCounts(0);
+        article.setWeight(Article.Article_Common);
+        article.setAuthorId(sysUser.getId());
+        article.setCategoryId(Long.parseLong(articleParam.getCategory().getId()));
+        // 插入后，形成article id
+        articleMapper.insert(article);
+        // bodyId
+        ArticleBody articleBody = new ArticleBody();
+        articleBody.setContent(articleParam.getBody().getContent());
+        articleBody.setContentHtml(articleParam.getBody().getContentHtml());
+        articleBody.setArticleId(article.getId());
+        articleBodyMapper.insert(articleBody);
+
+        // tag
+        List<TagVo> tags = articleParam.getTags();
+        if (tags != null) {
+            for (TagVo tag : tags) {
+                Long articleId = article.getId();
+                ArticleTag articleTag = new ArticleTag();
+                articleTag.setTagId(Long.parseLong(tag.getId()));
+                articleTag.setArticleId(articleId);
+                articleTagMapper.insert(articleTag);
+            }
+        }
+
+        // 更新body
+        article.setBodyId(articleBody.getId());
+
+        articleMapper.updateById(article);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("id", article.getId().toString());
+        return Result.success(map);
+
     }
 
 

@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import org.example.common.aop.LogAnnotation;
 import org.example.service.ArticleService;
 import org.example.vo.Result;
+import org.example.vo.params.ArticleParam;
 import org.example.vo.params.PageParams;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,8 +73,6 @@ public class ArticleController {
     }
 
 
-
-
    /**
     * 首页文章 归档
     * @Author: ZBZ
@@ -105,11 +104,11 @@ public class ArticleController {
 
 
 
-
-
-
-
-
+    @PostMapping("publish")
+    @ApiOperation("发布文章")
+    public Result publish(@RequestBody ArticleParam articleParam) {
+        return articleService.publish(articleParam);
+    }
 
 
 

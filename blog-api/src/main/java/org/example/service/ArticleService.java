@@ -1,6 +1,7 @@
 package org.example.service;
 
 import org.example.vo.Result;
+import org.example.vo.params.ArticleParam;
 import org.example.vo.params.PageParams;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,4 +69,15 @@ public interface ArticleService {
      * @return: void
      **/
     void transViewCountFromRedisToDb();
+
+
+
+    /**
+     * 发布文章
+     * @Author: ZBZ
+     * @Date: 2021/8/11
+     * @param articleParam: article param
+     * @return: void
+     **/
+    Result publish(ArticleParam articleParam);
 }

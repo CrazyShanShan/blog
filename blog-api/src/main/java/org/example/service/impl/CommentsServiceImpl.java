@@ -13,6 +13,7 @@ import org.example.vo.CommentVo;
 import org.example.vo.Result;
 import org.example.vo.UserVo;
 import org.example.vo.params.CommentParam;
+import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -63,6 +64,9 @@ public class CommentsServiceImpl implements CommentsService {
         Comment comment = new Comment();
         log.info("新增评论id: {}",comment.getId());
         comment.setArticleId(commentParam.getArticleId());
+
+
+
         comment.setAuthorId(sysUser.getId());
         comment.setContent(commentParam.getContent());
         comment.setCreateDate(System.currentTimeMillis());
@@ -102,6 +106,7 @@ public class CommentsServiceImpl implements CommentsService {
         Long authorId = comment.getAuthorId();
         UserVo userVo = sysUserService.findUserVoById(authorId);
         commentVo.setAuthor(userVo);
+        commentVo.setCreateDate(new DateTime(comment.getCreateDate()).toString("yyyy-MM-dd HH:mm"));
 
         // 子评论信息， 如果level = 1，
         Integer level = comment.getLevel();
