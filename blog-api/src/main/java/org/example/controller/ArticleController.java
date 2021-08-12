@@ -3,6 +3,7 @@ package org.example.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.example.common.aop.LogAnnotation;
+import org.example.common.cache.Cache;
 import org.example.service.ArticleService;
 import org.example.vo.Result;
 import org.example.vo.params.ArticleParam;
@@ -36,6 +37,7 @@ public class ArticleController {
     @PostMapping
     @LogAnnotation(module = "文章", operator = "获取文章列表")
     @ApiOperation("根据传来的 page pageNUm 。返回首页文章 列表")
+    @Cache(expire = 5 * 60 * 1000,name = "listArticle")
     public Result listArticles(@RequestBody PageParams pageParams) {
         return articleService.listArticles(pageParams);
     }
@@ -51,6 +53,7 @@ public class ArticleController {
     @PostMapping("hot")
     @ApiOperation("首页 最热文章")
     @LogAnnotation(module = "文章", operator = "获取最热门的5篇文章")
+    @Cache(expire = 5 * 60 * 1000,name = "hotArticle")
     public Result hotArticles() {
         int limit = 5;
         return articleService.hotArticles(limit);
@@ -67,6 +70,7 @@ public class ArticleController {
     @PostMapping("new")
     @ApiOperation("首页 最新文章")
     @LogAnnotation(module = "文章", operator = "获取最新的5篇文章")
+    @Cache(expire = 5 * 60 * 1000,name = "newArticle")
     public Result newArticles() {
         int limit = 5;
         return articleService.newArticles(limit);
