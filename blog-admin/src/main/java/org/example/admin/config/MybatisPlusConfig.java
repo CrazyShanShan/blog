@@ -1,4 +1,4 @@
-package org.example.amin.config;
+package org.example.admin.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * @Date: 2021/8/5
  */
 @Configuration
-@MapperScan("org.example.admin.dao.mapper")
+@MapperScan("org.example.admin.mapper")
 public class MybatisPlusConfig {
 
     // 分页插件
