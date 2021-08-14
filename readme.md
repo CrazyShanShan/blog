@@ -1,0 +1,2 @@
+blog
+从b站学习的码神之路博客项目，项目地址如下 https://www.bilibili.com/video/BV1Gb4y1d7zb?p=1 前端VUE+后端SPRINGBOOT 主要的技术点： JWT+REDIS+MYBATISPLUS+THRADLOCAL+THREADPOOL+SPRING-SECURITY 很好的练手项目，比较适合新手。 照着教程主要敲的是后端接口的实现。 老师思路讲的很清晰。 花费时间大概为1个星期的时间（每天2-3个小时）
