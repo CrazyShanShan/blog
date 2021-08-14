@@ -4,3 +4,4 @@ blog-parent.iml
 
 blog-api/target/**
 
+blog-admin/target/**
